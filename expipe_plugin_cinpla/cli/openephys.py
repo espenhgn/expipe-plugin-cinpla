@@ -151,7 +151,8 @@ def attach_to_cli(cli):
                         jsonl.append(json.loads(line))
                     except json.JSONDecodeError:
                         pass # skip lines with non-json output
-        ephocs = exdir_file.require_group('epochs')
+        processing = exdir_file.require_group('processing')
+        ephocs = processing.require_group('epochs')
         visual = ephocs.require_group('visual_stimulus')
         keys = []
         for stim in jsonl:
@@ -230,7 +231,8 @@ def attach_to_cli(cli):
         def generate_tracking(openephys_path, openephys_rec, exdir_file, ttl_time=0.*pq.s):
             trackballdata = get_trackballdata(pth=openephys_path)
             trackballdata['time'] += ttl_time # correct time stamps
-            tracking_ = exdir_file.require_group('tracking')
+            processing = exdir_file.require_group('processing')
+            tracking_ = processing.require_group('tracking')
             trackball = tracking_.require_group('trackball')
             position = trackball.require_group("position")
             position.attrs['start_time'] = 0 * pq.s
@@ -248,8 +250,6 @@ def attach_to_cli(cli):
                     dset = led.require_dataset('times', data=data['time'][inds]*pq.s)   # TODO: GRAB P-PORT EVENT - 10 s as mouse recording is always 10 s before the first visual stimulus
                     dset.attrs['num_samples'] = inds.sum()
 
-
-        
         project = PAR.PROJECT
         action = project.actions[action_id]
         exdir_path = _get_data_path(action)
