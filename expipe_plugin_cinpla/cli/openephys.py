@@ -118,6 +118,7 @@ def attach_to_cli(cli):
         from pathlib import Path
         import pandas
         import os
+        import warnings
 
         
         project = PAR.PROJECT
