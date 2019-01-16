@@ -157,7 +157,7 @@ def process_openephys(project, action_id, probe_path, sorter, spikesort=True, co
     # extract waveforms
     if spikesort:
         print('Computing waveforms')
-        wf = st.postprocessing.getUnitWaveforms(recording_cmr, sorting, by_property='group', verbose=True)
+        wf = st.postprocessing.getUnitWaveforms(recording_cmr, sorting, by_property='group', verbose=True, ms_before=0.5, ms_after=1.)
         print('Saving sorting output to exdir format')
         se.ExdirSortingExtractor.writeSorting(sorting, exdir_path, recording=recording_cmr)
     if compute_lfp:
@@ -174,9 +174,9 @@ def process_openephys(project, action_id, probe_path, sorter, spikesort=True, co
         generate_tracking(exdir_path, oe_recording)
 
     print('Cleanup')
-    if not os.access(tmpdir, os.W_OK):
+    if not os.access(str(tmpdir), os.W_OK):
         # Is the error an access error ?
-        os.chmod(tmpdir, stat.S_IWUSR)
-    shutil.rmtree(str(tmpdir))
+        os.chmod(str(tmpdir), stat.S_IWUSR)
+    shutil.rmtree(str(tmpdir), ignore_errors=True)
 
     print('Saved to exdir: ', exdir_path)
