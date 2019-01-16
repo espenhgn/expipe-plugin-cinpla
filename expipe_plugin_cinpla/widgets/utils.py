@@ -124,6 +124,38 @@ class MultiInput(ipywidgets.VBox):
 
         return tuple(multi_inputs)
 
+
+class ParameterSelectList(ipywidgets.VBox):
+    def __init__(self, param_dict, description, *args, **kwargs):
+        super(ParameterSelectList, self).__init__(*args, **kwargs)
+        self.description = description
+        self.update_params(param_dict)
+
+    def update_params(self, param_dict):
+        children = []
+        for (k, v) in param_dict.items():
+            if isinstance(v, bool):
+                wid = ipywidgets.Checkbox(description=k, value=v, style={'description_width': 'initial'})
+            elif isinstance(v, (int, np.integer)):
+                wid = ipywidgets.IntText(description=k, value=v, style={'description_width': 'initial'})
+            elif isinstance(v, (float, np.float)):
+                wid = ipywidgets.FloatText(description=k, value=v, style={'description_width': 'initial'})
+            else:
+                wid = ipywidgets.Text(description=k, value=str(v), style={'description_width': 'initial'})
+
+            children.append(wid)
+        self.children = children
+
+    @property
+    def value(self):
+        keys = []
+        values = []
+        for ch in self.children:
+            keys.append(ch.description)
+            values.append(ch.value)
+        return dict(zip(keys, values))
+
+
 class DateTimePicker(ipywidgets.HBox):
     def __init__(self, *args, **kwargs):
         super(DateTimePicker, self).__init__(*args, **kwargs)

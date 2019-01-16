@@ -1,6 +1,7 @@
 from expipe_plugin_cinpla.imports import *
 from expipe_plugin_cinpla.scripts import openephys
-from .utils import SelectDirectoryButton, MultiInput, SearchSelectMultiple, SelectFileButton, required_values_filled, none_if_empty, split_tags, SearchSelect
+from .utils import SelectDirectoryButton, MultiInput, SearchSelectMultiple, SelectFileButton, \
+    required_values_filled, none_if_empty, split_tags, SearchSelect, ParameterSelectList
 
 
 def openephys_view(project):
@@ -93,30 +94,75 @@ def openephys_view(project):
 
 #TODO add spike sorter specific params
 def process_view(project):
-    probe_path = SelectFileButton('.prb', description='*Select probe file')
+    import spiketoolkit as st
+
+    probe_path = SelectFileButton('.prb', description='*Select probe file', style={'description_width': 'initial'})
     action_id = SearchSelect(project.actions, description='*Actions')
     sorter = ipywidgets.Dropdown(
-        description='Sorter', options=['klusta', 'mountain', 'kilosort', 'spyking-circus', 'ironclust'])
+        description='Sorter', options=['klusta', 'mountain', 'kilosort', 'spyking-circus', 'ironclust'],
+        style={'description_width': 'initial'}
+    )
+    params = st.sorters.klusta_default_params()
+    sorter_param = ParameterSelectList(description='Spike sorting options', param_dict=params, layout={'width': '100%'})
+    compute_lfp = ipywidgets.Checkbox(
+        description='Compute LFP', value=True, style={'description_width': 'initial'})
+    compute_mua = ipywidgets.Checkbox(
+        description='Compute MUA', value=False, style={'description_width': 'initial'})
+    spikesort = ipywidgets.Checkbox(
+        description='Spike sort', value=True, style={'description_width': 'initial'})
 
-    run = ipywidgets.Button(description='Process')
+    check_boxes = ipywidgets.VBox([ipywidgets.Label('Processing options', style={'description_width': 'initial'}),
+                                   spikesort, compute_lfp, compute_mua],
+                                  layout={'width': '30%'})
+
+    run = ipywidgets.Button(description='Process', layout={'width': '100%', 'height': '100px'})
+    run.style.font_weight = '100px'
+    run.style.button_color = 'pink'
 
     fields = ipywidgets.VBox([
+        probe_path,
         sorter,
-        run
+        sorter_param
     ])
+
     main_box = ipywidgets.VBox([
-            probe_path,
-            ipywidgets.HBox([fields, action_id])
-        ])
+            ipywidgets.HBox([fields, action_id, check_boxes]), run
+        ], layout={'width': '100%'})
+    main_box.layout.display = 'flex'
+
+    def on_change(change):
+        if change['type'] == 'change' and change['name'] == 'value':
+            if sorter.value == 'klusta':
+                params = st.sorters.klusta_default_params()
+            elif sorter.value == 'mountain':
+                params = st.sorters.mountainsort4_default_params()
+            elif sorter.value == 'kilosort':
+                params = st.sorters.kilosort_default_params()
+            elif sorter.value == 'spyking-circus':
+                params = st.sorters.spyking_circus_default_params()
+            elif sorter.value == 'ironclust':
+                params = st.sorters.ironclust_default_params()
+            else:
+                raise NotImplementedError("sorter is not implemented")
+            sorter_param.update_params(params)
 
     def on_run(change):
         if not required_values_filled(probe_path, action_id):
             return
+        spikesorter_params = sorter_param.value
+        for (k, v) in spikesorter_params.items():
+            if v == 'None':
+                spikesorter_params[k] = None
         openephys.process_openephys(
             project=project,
             action_id=action_id.value,
             probe_path=probe_path.file,
-            sorter=sorter.value)
+            sorter=sorter.value,
+            spikesort=spikesort.value,
+            compute_lfp=compute_lfp.value,
+            compute_mua=compute_mua.value,
+            spikesorter_params=spikesorter_params)
 
+    sorter.observe(on_change)
     run.on_click(on_run)
     return main_box

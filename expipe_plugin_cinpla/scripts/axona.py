@@ -14,19 +14,20 @@ def register_axona_recording(
     if location is None:
         print('Missing option "location".')
         return
-    if not axona_filename.endswith('.set'):
+    axona_filename = pathlib.Path(axona_filename)
+    if not axona_filename.suffix == '.set':
         print("Sorry, we need an Axona .set file not " +
               "'{}'.".format(axona_filename))
         print('Aborting registration!')
         return
     if len(cluster_group) == 0:
         cluster_group = None # TODO set proper default via callback
-    entity_id = entity_id or axona_filename.split(os.sep)[-2]
-    axona_file = pyxona.File(axona_filename)
+    entity_id = entity_id or axona_filename.parent.stem
+    axona_file = pyxona.File(str(axona_filename))
     if action_id is None:
         session_dtime = datetime.strftime(axona_file._start_datetime,
                                           '%d%m%y')
-        basename, _ = os.path.splitext(axona_filename)
+        basename = str(axona_filename.stem)
         session = basename[-2:]
         action_id = entity_id + '-' + session_dtime + '-' + session
     try:
