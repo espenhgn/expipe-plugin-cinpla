@@ -106,20 +106,20 @@ def process_openephys(project, action_id, probe_path, sorter):
     recording_mua = st.preprocessing.resample(st.preprocessing.rectify(recording_cmr), 1000)
     print('HP')
     filt_filename = 'filt.dat'
-    se.RawRecordingExtractor.writeRecording(recording_cmr, save_path=filt_filename)
+    se.BinDatRecordingExtractor.writeRecording(recording_cmr, save_path=filt_filename)
     print('LFP')
     lfp_filename = 'lfp.dat'
-    se.RawRecordingExtractor.writeRecording(recording_lfp, save_path=lfp_filename)
+    se.BinDatRecordingExtractor.writeRecording(recording_lfp, save_path=lfp_filename)
     print('MUA')
     mua_filename = 'mua.dat'
-    se.RawRecordingExtractor.writeRecording(recording_mua, save_path=mua_filename)
-    recording_cmr = se.RawRecordingExtractor(filt_filename, samplerate=recording_cmr.getSamplingFrequency(),
+    se.BinDatRecordingExtractor.writeRecording(recording_mua, save_path=mua_filename)
+    recording_cmr = se.BinDatRecordingExtractor(filt_filename, samplerate=recording_cmr.getSamplingFrequency(),
                                               numchan=len(recording_cmr.getChannelIds()))
     recording_cmr = se.loadProbeFile(recording_cmr, probe_path)
-    recording_lfp = se.RawRecordingExtractor(lfp_filename, samplerate=recording_lfp.getSamplingFrequency(),
+    recording_lfp = se.BinDatRecordingExtractor(lfp_filename, samplerate=recording_lfp.getSamplingFrequency(),
                                              numchan=len(recording_lfp.getChannelIds()))
     recording_lfp = se.loadProbeFile(recording_lfp, probe_path)
-    recording_mua = se.RawRecordingExtractor(mua_filename, samplerate=recording_mua.getSamplingFrequency(),
+    recording_mua = se.BinDatRecordingExtractor(mua_filename, samplerate=recording_mua.getSamplingFrequency(),
                                              numchan=len(recording_mua.getChannelIds()))
     recording_mua = se.loadProbeFile(recording_mua, probe_path)
 
@@ -129,7 +129,7 @@ def process_openephys(project, action_id, probe_path, sorter):
         sorting = st.sorters.mountainsort4(recording_cmr, by_property='group',
                                            adjacency_radius=10, detect_sign=-1)
     elif sorter == 'kilosort':
-        sorting = st.sorters.kilosort(recording_cmr, by_property='group')
+        sorting = st.sorters.kilosort(recording_cmr, by_property='group', useGPU=True)
     elif sorter == 'spyking-circus':
         sorting = st.sorters.spyking_circus(recording_cmr, by_property='group', merge_spikes=False)
     elif sorter == 'ironclust':
@@ -149,7 +149,7 @@ def process_openephys(project, action_id, probe_path, sorter):
     print('Saving MUA to exdir format')
     se.ExdirRecordingExtractor.writeRecording(recording_mua, exdir_path, mua=True)
     print('Cleanup')
-    os.remove(filt_filename)
-    os.remove(lfp_filename)
-    os.remove(mua_filename)
+    #os.remove(filt_filename)
+    #os.remove(lfp_filename)
+    #os.remove(mua_filename)
     print('Saved to exdir: ', exdir_path)
