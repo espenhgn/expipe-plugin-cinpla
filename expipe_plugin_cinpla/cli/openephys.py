@@ -89,13 +89,27 @@ def attach_to_cli(cli):
                   type=click.STRING,
                   help='Path to probefile, assumed to be in expipe config directory by default.',
                   )
+    @click.option('--spikesort',
+                  default=True,
+                  type=click.BOOL,
+                  help='run spikesorting procedure (default True)')
     @click.option('--sorter',
-                  default='klusta',
+                  default='ironclust',
                   type=click.Choice(['klusta', 'mountain', 'kilosort', 'spyking-circus', 'ironclust']),
-                  help='',
+                  help='choose spike sorter (default ironclust)',
                   )
-    def _process_openephys(action_id, probe_path, sorter):
-        openephys.process_openephys(PAR.PROJECT, action_id, probe_path, sorter)
+    @click.option('--compute_lfp',
+                  default=True,
+                  type=click.BOOL,
+                  help='compute LFP signal (default True)')
+    @click.option('--compute_mua',
+                  default=True,
+                  type=click.BOOL,
+                  help='compute MUA signal (default True)')
+    def _process_openephys(action_id, probe_path, spikesort, sorter, compute_lfp, compute_mua):
+        openephys.process_openephys(PAR.PROJECT, action_id, probe_path, sorter,
+                                    spikesort=spikesort, compute_lfp=compute_lfp,
+                                    compute_mua=compute_mua)
 
 
 
