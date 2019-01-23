@@ -145,7 +145,7 @@ def _make_data_path(action, overwrite):
 def _get_data_path(action):
     action_path = action._backend.path
     project_path = action_path.parent.parent
-    data_path = action.data['main']
+    data_path = str(pathlib.Path(pathlib.PureWindowsPath(action.data['main'])))
     return project_path / data_path
 
 
