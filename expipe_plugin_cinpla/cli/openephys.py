@@ -62,9 +62,14 @@ def attach_to_cli(cli):
                   type=click.STRING,
                   help='Which templates to add',
                   )
+    @click.option('--delete-raw-data',
+                  type=click.BOOL,
+                  default=False,
+                  help='Delete raw data (BOOL)')
     def _register_openephys_recording(
         action_id, openephys_path, depth, overwrite, templates,
-        entity_id, user, session, location, message, tag, register_depth):
+        entity_id, user, session, location, message, tag, register_depth,
+        delete_raw_data):
         openephys.register_openephys_recording(
             project=PAR.PROJECT,
             action_id=action_id,
@@ -78,7 +83,7 @@ def attach_to_cli(cli):
             location=location,
             message=message,
             tag=tag,
-            delete_raw_data=None,
+            delete_raw_data=delete_raw_data,
             correct_depth_answer=None,
             register_depth=register_depth)
 
