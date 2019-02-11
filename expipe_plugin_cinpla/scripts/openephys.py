@@ -199,7 +199,10 @@ def process_openephys(project, action_id, probe_path, sorter, acquisition_folder
                 else:
                     raise NotImplementedError("sorter is not implemented")
             except Exception as e:
-                shutil.rmtree(tmpdir)
+                try:
+                    shutil.rmtree(tmpdir)
+                except TypeError as te:
+                    pass
                 print(e)
                 raise Exception("Spike sorting failed")
             print('Found ', len(sorting.getUnitIds()), ' units!')

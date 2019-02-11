@@ -43,14 +43,17 @@ def process_psychopy(project, action_id, jsonpath):
     dur = []
 
     key = list(json_data[0].keys())[0]
-    for event in json_data:
+    for i, event in enumerate(json_data):
         new_key = list(event.keys())[0]
         if key != new_key:
             warn("Different experiment design in session; {} =/= {}".format(key, new_key))
         key = new_key
 
         # Add dataset to exdir
-        ts.append(event[key]["time"])
+        try:
+            ts.append(event[key]["time"])
+        except:
+            pass
         dur.append(event[key]["duration"])
         ori.append(event[key]["orientation"])
 
@@ -58,7 +61,8 @@ def process_psychopy(project, action_id, jsonpath):
     durations = np.array(dur)*pq.s
     orientations = np.array(ori)*pq.deg
 
-    psychopy.require_dataset('timestamps', data=timestamps)
+    if timestamps.size > 0:
+        psychopy.require_dataset('timestamps', data=timestamps)
     psychopy.require_dataset('durations', data=durations)
     data = psychopy.require_dataset('data', data=orientations)
     data.attrs['type'] = key

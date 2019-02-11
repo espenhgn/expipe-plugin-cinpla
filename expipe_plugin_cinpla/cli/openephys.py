@@ -173,9 +173,9 @@ def attach_to_process(cli):
                 with spike_params.open() as f:
                     params = yaml.load(f)
             else:
-                params = None
+                params = dict()
         else:
-            params = None
+            params = dict()
 
         if split_channels == 'custom':
             import ast
