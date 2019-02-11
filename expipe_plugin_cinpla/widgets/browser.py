@@ -1,6 +1,9 @@
 from expipe_plugin_cinpla.imports import *
 import IPython.display as ipd
-from .openephys import openephys_view, process_view
+from .psychopy import process_psychopy_view
+from .openephys import register_openephys_view, process_openephys_view
+from .intan import register_intan_view, process_intan_view
+from .tracking import process_tracking_view
 from .entity import entity_view
 from .adjust import adjustment_view
 from .surgery import perfuse_view, surgery_view
@@ -13,6 +16,7 @@ import expipe
 # TODO: processing
 # TODO: fix old data
 
+
 def display(project_path=None):
     project_path = project_path or PAR.PROJECT_ROOT
     assert project_path is not None
@@ -20,6 +24,7 @@ def display(project_path=None):
     # register tab
     register_tab_tab_titles = [
         'OpenEphys',
+        'Intan',
         'Axona',
         'Adjustment',
         'Entity',
@@ -27,7 +32,8 @@ def display(project_path=None):
         'Perfusion']
     register_tab = ipywidgets.Tab()
     register_tab.children = [
-        openephys_view(project),
+        register_openephys_view(project),
+        register_intan_view(project),
         axona_view(project),
         adjustment_view(project),
         entity_view(project),
@@ -38,10 +44,13 @@ def display(project_path=None):
         register_tab.set_title(i, title)
 
     process_tab_tab_titles = [
-        'OpenEphys',]
+        'OpenEphys', 'Intan', 'Tracking', 'Psychopy']
     process_tab = ipywidgets.Tab()
     process_tab.children = [
-        process_view(project)
+        process_openephys_view(project),
+        process_intan_view(project),
+        process_tracking_view(project),
+        process_psychopy_view(project)
     ]
     for i, title in enumerate(process_tab_tab_titles):
         process_tab.set_title(i, title)

@@ -25,7 +25,7 @@ def register_axona_recording(
     entity_id = entity_id or axona_filename.parent.stem
     axona_file = pyxona.File(str(axona_filename))
     if action_id is None:
-        session_dtime = datetime.strftime(axona_file._start_datetime,
+        session_dtime = datetime.datetime.strftime(axona_file._start_datetime,
                                           '%d%m%y')
         basename = str(axona_filename.stem)
         session = basename[-2:]
@@ -51,7 +51,7 @@ def register_axona_recording(
     action.location = location
     action.type = 'Recording'
     if message:
-        action.create_message(text=message, user=user, datetime=datetime.now())
+        action.create_message(text=message, user=user, datetime=datetime.datetime.now())
     if register_depth:
         correct_depth = utils.register_depth(
             project=project, action=action, depth=depth,
@@ -75,5 +75,5 @@ def register_axona_recording(
     else:
         print('WARNING: Not registering Axona ".inp".')
     time_string = exdir.File(exdir_path).attrs['session_start_time']
-    dtime = datetime.strptime(time_string, '%Y-%m-%dT%H:%M:%S')
+    dtime = datetime.datetime.strptime(time_string, '%Y-%m-%dT%H:%M:%S')
     action.datetime = dtime

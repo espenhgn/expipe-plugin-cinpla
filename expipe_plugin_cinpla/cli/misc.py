@@ -63,3 +63,32 @@ def attach_to_cli(cli):
             print('Sorting channel group {}'.format(channel_group))
             clusters = model.cluster(np.arange(model.n_spikes), model.channel_ids)
             model.save(spike_clusters=clusters)
+
+    @cli.command('add-server')
+    @click.option(
+        '--name', '-n', type=click.STRING, help='The name of the server'
+    )
+    @click.option(
+        '--domain', '-d', type=click.STRING, help='The server domain (or IP address)'
+    )
+    @click.option(
+        '--username', '-un', type=click.STRING, help='The username to access the server.'
+    )
+    @click.option(
+        '--password', '-pw', type=click.STRING, prompt=True, hide_input=True, help='The server password (will be prompted)'
+    )
+    def add_server(name, domain, username, password):
+        """Add server info."""
+        cwd = pathlib.Path.cwd()
+        local_root, _ = expipe.config._load_local_config(cwd)
+        path = None
+        config = expipe.config._load_config_by_name(path)
+        current_servers = config.get('servers') or []
+        if name is not None and domain is not None and username is not None and password is not None:
+            pass
+        else:
+            raise Exception("Provide server name, domain, and username. Password is prompted.")
+        new_server = {'host': name, 'domain': domain, 'user': username, 'password': password}
+        current_servers.append(new_server)
+        config['servers'] = current_servers
+        expipe.config._dump_config_by_name(path, config)

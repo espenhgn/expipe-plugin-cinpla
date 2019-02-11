@@ -38,9 +38,9 @@ def register_surgery(
 
     register_templates(action, templates)
     if date == 'now':
-        date = datetime.now()
+        date = datetime.datetime.now()
     if isinstance(date, str):
-        date = datetime.strftime(date, DTIME_FORMAT)
+        date = datetime.datetime.strftime(date, DTIME_FORMAT)
     action.datetime = date
     print('Registering location', location)
     action.location = location
@@ -50,7 +50,7 @@ def register_surgery(
     print('Registering user', user)
     action.users.append(user)
     if message:
-        action.create_message(text=message, user=user, datetime=datetime.now())
+        action.create_message(text=message, user=user, datetime=datetime.datetime.now())
     for key, probe, x, y, z, unit in position:
         action.modules[key] = {}
         probe_key = 'probe_{}'.format(probe)
@@ -89,12 +89,12 @@ def register_perfusion(project, entity_id, date, user, weight, overwrite,
             return
     register_templates(action, templates)
     if date == 'now':
-        date = datetime.now()
+        date = datetime.datetime.now()
     if isinstance(date, str):
-        date = datetime.strftime(date, DTIME_FORMAT)
+        date = datetime.datetime.strftime(date, DTIME_FORMAT)
     if message:
         action.messages.create_message(
-            text=message, user=user, datetime= datetime.now())
+            text=message, user=user, datetime= datetime.datetime.now())
     action.datetime = date
     print('Registering location', location)
     action.location = location

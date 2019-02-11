@@ -1,12 +1,12 @@
 from expipe_plugin_cinpla.imports import *
-from expipe_plugin_cinpla.scripts import openephys
+from expipe_plugin_cinpla.scripts import intan
 from .utils import SelectDirectoryButton, MultiInput, SearchSelectMultiple, SelectFileButton, \
     required_values_filled, none_if_empty, split_tags, SearchSelect, ParameterSelectList
 import ast
 
 
-def register_openephys_view(project):
-    openephys_path = SelectDirectoryButton(description='*Select OpenEphys path')
+def register_intan_view(project):
+    intan_path = SelectFileButton(description='*Select Intan rhs or rhd path')
     user = ipywidgets.Text(placeholder='*User', value=PAR.USERNAME)
     session = ipywidgets.Text(placeholder='Session')
     location = ipywidgets.Text(placeholder='*Location', value=PAR.LOCATION)
@@ -35,46 +35,46 @@ def register_openephys_view(project):
         tag,
         register
     ])
-    checks = ipywidgets.HBox([openephys_path, register_depth, overwrite, delete_raw_data])
+    checks = ipywidgets.HBox([intan_path, register_depth, overwrite, delete_raw_data])
     main_box = ipywidgets.VBox([
             checks,
             ipywidgets.HBox([fields, templates])
         ])
 
     def on_register_depth(change):
-         if change['name'] == 'value':
-             if change['owner'].value:
-                 children = list(checks.children)
-                 children = children[:2] + [register_depth_from_adjustment] + children[2:]
-                 checks.children = children
-             else:
+        if change['name'] == 'value':
+            if change['owner'].value:
+                children = list(checks.children)
+                children = children[:2] + [register_depth_from_adjustment] + children[2:]
+                checks.children = children
+            else:
                 children = list(checks.children)
                 del(children[2])
                 checks.children = children
 
     def on_register_depth_from_adjustment(change):
-         if change['name'] == 'value':
-             if not change['owner'].value:
-                 children = list(fields.children)
-                 children = children[:5] + [depth] + children[5:]
-                 fields.children = children
-             else:
-                 children = list(fields.children)
-                 del(children[5])
-                 fields.children = children
+        if change['name'] == 'value':
+            if not change['owner'].value:
+                children = list(fields.children)
+                children = children[:5] + [depth] + children[5:]
+                fields.children = children
+            else:
+                children = list(fields.children)
+                del(children[5])
+                fields.children = children
 
     register_depth.observe(on_register_depth)
     register_depth_from_adjustment.observe(on_register_depth_from_adjustment)
 
     def on_register(change):
-        if not required_values_filled(user, location, openephys_path):
+        if not required_values_filled(user, location, intan_path):
             return
         tags = split_tags(tag)
-        openephys.register_openephys_recording(
+        intan.register_intan_recording(
             templates=templates.value,
             project=project,
             action_id=none_if_empty(action_id.value),
-            openephys_path=openephys_path.directory,
+            intan_path=intan_path.file,
             depth=depth.value,
             overwrite=overwrite.value,
             register_depth=register_depth.value,
@@ -91,7 +91,7 @@ def register_openephys_view(project):
     return main_box
 
 
-def process_openephys_view(project):
+def process_intan_view(project):
     import spiketoolkit as st
 
     probe_path = SelectFileButton('.prb', description='*Select probe file', style={'description_width': 'initial'},
@@ -190,6 +190,10 @@ def process_openephys_view(project):
                                    style={'description_width': 'initial'})
     custom_split.layout.visibility = 'hidden'
 
+    remove_artifacts = ipywidgets.IntText(description='Remove art. ch. (1-based)', value=None, placeholder='None',
+                                          style={'description_width': 'initial'})
+    remove_artifacts.layout.visibility = 'hidden'
+
     bad_channels = ipywidgets.Text(description='Bad channels', value='', placeholder='(e.g. 5, 8, 12)',
                                    style={'description_width': 'initial'})
     bad_channels.layout.visibility = 'hidden'
@@ -197,7 +201,8 @@ def process_openephys_view(project):
     rightbox = ipywidgets.VBox([ipywidgets.Label('Processing options', style={'description_width': 'initial'},
                                                  layout={'width': 'initial'}),
                                 spikesort, compute_lfp, compute_mua, servers, other_settings,
-                                bad_channels, reference, split_group, custom_split], layout={'width': 'initial'})
+                                bad_channels, remove_artifacts, reference, split_group, custom_split],
+                               layout={'width': 'initial'})
 
     run = ipywidgets.Button(description='Process', layout={'width': '100%', 'height': '100px'})
     run.style.button_color = 'pink'
@@ -253,7 +258,7 @@ def process_openephys_view(project):
             split = ast.literal_eval(split_group.value)
         else:
             split = 'all'
-        openephys.process_openephys(
+        intan.process_intan(
             project=project,
             action_id=action_id.value,
             probe_path=probe_path.file,
@@ -265,7 +270,8 @@ def process_openephys_view(project):
             server=servers.value,
             ground=bad_chans,
             ref=ref,
-            split=split)
+            split=split,
+            remove_artifact_channel=remove_artifacts.value - 1)
 
     def on_show(change):
         if change['type'] == 'change' and change['name'] == 'value':
@@ -279,11 +285,14 @@ def process_openephys_view(project):
             if other_settings.value:
                 bad_channels.layout.visibility = 'visible'
                 reference.layout.visibility = 'visible'
-                split_group.layout.visibility = 'visible'
+                remove_artifacts.layout.visibility = 'visible'
+                if reference.value != 'none':
+                    split_group.layout.visibility = 'visible'
             else:
                 bad_channels.layout.visibility = 'hidden'
                 reference.layout.visibility = 'hidden'
                 split_group.layout.visibility = 'hidden'
+                remove_artifacts.layout.visibility = 'hidden'
 
     def on_split(change):
         if change['type'] == 'change' and change['name'] == 'value':

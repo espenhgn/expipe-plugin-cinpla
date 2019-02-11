@@ -135,7 +135,9 @@ class ParameterSelectList(ipywidgets.VBox):
         children = []
         for (k, v) in param_dict.items():
             if isinstance(v, bool):
-                wid = ipywidgets.Checkbox(description=k, value=v, style={'description_width': 'initial'})
+                wid = ipywidgets.ToggleButton(description=k, value=v, disabled=False, button_style='',
+                                              tooltip='Description',
+                                              icon='check', style={'description_width': 'initial'})
             elif isinstance(v, (int, np.integer)):
                 wid = ipywidgets.IntText(description=k, value=v, style={'description_width': 'initial'})
             elif isinstance(v, (float, np.float)):

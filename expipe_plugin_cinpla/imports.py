@@ -27,6 +27,11 @@ def pathlib():
     return pathlib
 
 @lazy_import
+def yaml():
+    import yaml
+    return yaml
+
+@lazy_import
 def ipywidgets():
     import ipywidgets
     return ipywidgets
@@ -38,8 +43,13 @@ def pyopenephys():
 
 @lazy_import
 def openephys_io():
-    from expipe_io_neuro import openephys as openephys_io
+    from expipe_io_neuro.openephys import openephys as openephys_io
     return openephys_io
+
+@lazy_import
+def pyintan():
+    import pyintan
+    return pyintan
 
 @lazy_import
 def pyxona():
@@ -78,13 +88,8 @@ def shutil():
 
 @lazy_import
 def datetime():
-    from datetime import datetime
+    import datetime
     return datetime
-
-@lazy_import
-def timedelta():
-    from datetime import timedelta
-    return timedelta
 
 @lazy_import
 def subprocess():

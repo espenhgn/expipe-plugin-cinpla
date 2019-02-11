@@ -16,5 +16,5 @@ setup(
     maintainer_email="m.e.lepperod@medisin.uio.no",
     platforms=['Linux', "Windows"],
     description="Plugins for the CINPLA lab",
-    long_description=long_description,
+    long_description=long_description
 )

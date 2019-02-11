@@ -3,7 +3,7 @@ from expipe_plugin_cinpla.scripts import openephys
 from . import utils
 
 
-def attach_to_cli(cli):
+def attach_to_register(cli):
     @cli.command('openephys',
                  short_help='Register an open-ephys recording-action to database.')
     @click.argument('openephys-path', type=click.Path(exists=True))
@@ -66,59 +66,135 @@ def attach_to_cli(cli):
                   type=click.BOOL,
                   default=False,
                   help='Delete raw data (BOOL)')
-    def _register_openephys_recording(
-        action_id, openephys_path, depth, overwrite, templates,
-        entity_id, user, session, location, message, tag, register_depth,
-        delete_raw_data):
-        openephys.register_openephys_recording(
-            project=PAR.PROJECT,
-            action_id=action_id,
-            openephys_path=openephys_path,
-            depth=depth,
-            overwrite=overwrite,
-            templates=templates,
-            entity_id=entity_id,
-            user=user,
-            session=session,
-            location=location,
-            message=message,
-            tag=tag,
-            delete_raw_data=delete_raw_data,
-            correct_depth_answer=None,
-            register_depth=register_depth)
+    def _register_openephys_recording(action_id, openephys_path, depth, overwrite, templates,
+                                      entity_id, user, session, location, message, tag, register_depth,
+                                      delete_raw_data):
+        openephys.register_openephys_recording(project=PAR.PROJECT,
+                                               action_id=action_id,
+                                               openephys_path=openephys_path,
+                                               depth=depth,
+                                               overwrite=overwrite,
+                                               templates=templates,
+                                               entity_id=entity_id,
+                                               user=user,
+                                               session=session,
+                                               location=location,
+                                               message=message,
+                                               tag=tag,
+                                               delete_raw_data=delete_raw_data,
+                                               correct_depth_answer=None,
+                                               register_depth=register_depth)
 
-    @cli.command('process',
-                 short_help='Filter data, spike sort, create LFP and MUA file output.')
+
+def attach_to_process(cli):
+    @cli.command('openephys',
+                 short_help='Process open ephys recordings.')
     @click.argument('action-id', type=click.STRING)
     @click.option('--probe-path',
                   type=click.STRING,
                   help='Path to probefile, assumed to be in expipe config directory by default.',
                   )
-    @click.option('--spikesort',
-                  default=True,
-                  type=click.BOOL,
-                  help='run spikesorting procedure (default True)')
     @click.option('--sorter',
-                  default='ironclust',
+                  default='klusta',
                   type=click.Choice(['klusta', 'mountain', 'kilosort', 'spyking-circus', 'ironclust']),
-                  help='choose spike sorter (default ironclust)',
+                  help='Spike sorter software to be used.',
                   )
-    @click.option('--compute_lfp',
-                  default=True,
-                  type=click.BOOL,
-                  help='compute LFP signal (default True)')
-    @click.option('--compute_mua',
-                  default=True,
-                  type=click.BOOL,
-                  help='compute MUA signal (default True)')
-    def _process_openephys(action_id, probe_path, spikesort, sorter, compute_lfp, compute_mua):
-        openephys.process_openephys(PAR.PROJECT, action_id, probe_path, sorter,
-                                    spikesort=spikesort, compute_lfp=compute_lfp,
-                                    compute_mua=compute_mua)
+    @click.option('--acquisition',
+                  default=None,
+                  type=click.STRING,
+                  help='(optional) Open ephys acquisition folder.',
+                  )
+    @click.option('--exdir-path',
+                  default=None,
+                  type=click.STRING,
+                  help='(optional) Exdir file path.',
+                  )
+    @click.option('--no-sorting',
+                  is_flag=True,
+                  help='if True spikesorting is not performed.',
+                  )
+    @click.option('--no-lfp',
+                  is_flag=True,
+                  help='if True LFP are not extracted.',
+                  )
+    @click.option('--no-mua',
+                  is_flag=True,
+                  help='if True MUA are not extracted.',
+                  )
+    @click.option('--spike-params',
+                  type=click.STRING,
+                  default=None,
+                  help='Path to spike sorting params yml file.',
+                  )
+    @click.option('--server',
+                  type=click.STRING,
+                  default=None,
+                  help="'local' or name of expipe server.",
+                  )
+    @click.option('--ground', '-g',
+                  type=click.INT,
+                  multiple=True,
+                  default=None,
+                  help="bad channels to ground.",
+                  )
+    @click.option('--ref',
+                  default='cmr',
+                  type=click.Choice(['cmr', 'car', 'none']),
+                  help='Reference to be used.',
+                  )
+    @click.option('--split-channels',
+                  default='all',
+                  type=click.STRING,
+                  help="It can be 'all', 'half', or list of channels used for custom split e.g. [[0,1,2,3,4], [5,6,7,8,9]]"
+                  )
+    @click.option('--ms-before-wf',
+                  default=1,
+                  type=click.FLOAT,
+                  help="ms to clip before waveform peak"
+                  )
+    @click.option('--ms-after-wf',
+                  default=2,
+                  type=click.FLOAT,
+                  help="ms to clip after waveform peak"
+                  )
+    def _process_openephys(action_id, probe_path, sorter, no_sorting, no_mua, no_lfp, ms_before_wf, ms_after_wf,
+                           spike_params, server, acquisition, exdir_path, ground, ref, split_channels):
+        if no_sorting:
+            spikesort = False
+        else:
+            spikesort = True
+        if no_lfp:
+            compute_lfp = False
+        else:
+            compute_lfp = True
+        if no_mua:
+            compute_mua = False
+        else:
+            compute_mua = True
+        if spike_params is not None:
+            spike_params = pathlib.Path(spike_params)
+            if spike_params.is_file():
+                with spike_params.open() as f:
+                    params = yaml.load(f)
+            else:
+                params = dict()
+        else:
+            params = dict()
+        
+        if split_channels == 'custom':
+            import ast
+            split_channels = ast.literal_eval(split_channels)
+            assert isinstance(split_channels, list), 'With custom reference the list of channels has to be provided ' \
+                                                     'with the --split-channels argument'
+
+        openephys.process_openephys(project=PAR.PROJECT, action_id=action_id, probe_path=probe_path, sorter=sorter,
+                                    spikesort=spikesort, compute_lfp=compute_lfp, compute_mua=compute_mua,
+                                    spikesorter_params=params, server=server, acquisition_folder=acquisition,
+                                    exdir_file_path=exdir_path, ground=ground, ref=ref, split=split_channels,
+                                    ms_before_wf=ms_before_wf, ms_after_wf=ms_after_wf)
 
 
-
-    @cli.command('psychopy',
+    @cli.command('psychopy_cobra',
                  short_help='process psychopy data')
     @click.argument('action-id', type=click.STRING)
     def _process_psychopy(action_id):
@@ -148,7 +224,7 @@ def attach_to_cli(cli):
         if acquisition.attrs['acquisition_system'] is None:
             raise ValueError('No Open Ephys aquisition system ' +
                              'related to this action')
-        openephys_session = acquisition.attrs["openephys_session"]
+        openephys_session = acquisition.attrs["session"]
         openephys_path = Path(acquisition.directory) / openephys_session
 
         openephys_file = pyopenephys.File(str(openephys_path))
@@ -278,7 +354,7 @@ def attach_to_cli(cli):
         if acquisition.attrs['acquisition_system'] is None:
             raise ValueError('No Open Ephys aquisition system ' +
                              'related to this action')
-        openephys_session = acquisition.attrs["openephys_session"]
+        openephys_session = acquisition.attrs["session"]
         openephys_path = Path(acquisition.directory) / openephys_session
         
         openephys_file = pyopenephys.File(str(openephys_path))

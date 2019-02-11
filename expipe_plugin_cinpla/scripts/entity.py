@@ -22,17 +22,17 @@ def register_entity(project, entity_id, user, message, location, tag, overwrite,
             print(str(e) + '. Use "overwrite"')
             return
     if isinstance(birthday, str):
-        birthday = datetime.strftime(
-            datetime.strptime(birthday, '%d.%m.%Y'), DTIME_FORMAT)
+        birthday = datetime.datetime.strftime(
+            datetime.datetime.strptime(birthday, '%d.%m.%Y'), DTIME_FORMAT)
     utils.register_templates(entity, templates)
-    entity.datetime = datetime.now()
+    entity.datetime = datetime.datetime.now()
     entity.type = 'Subject'
     entity.tags.extend(list(tag))
     entity.location = location
     print('Registering user ' + user)
     entity.users = [user]
     if message:
-        entity.create_message(text=message, user=user, datetime=datetime.now())
+        entity.create_message(text=message, user=user, datetime=datetime.datetime.now())
     for key, val in kwargs.items():
         if 'register' not in entity.modules:
             entity.modules['register'] = {}
