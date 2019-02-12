@@ -148,12 +148,12 @@ def attach_to_process(cli):
                   help="It can be 'all', 'half', or list of channels used for custom split e.g. [[0,1,2,3,4], [5,6,7,8,9]]"
                   )
     @click.option('--ms-before-wf',
-                  default=1,
+                  default=0.5,
                   type=click.FLOAT,
                   help="ms to clip before waveform peak"
                   )
     @click.option('--ms-after-wf',
-                  default=2,
+                  default=1.5,
                   type=click.FLOAT,
                   help="ms to clip after waveform peak"
                   )
