@@ -5,8 +5,8 @@ from .utils import SelectFileButton, MultiInput, SearchSelectMultiple, required_
 
 def axona_view(project):
     axona_path = SelectFileButton('.set')
-    user = ipywidgets.Text(placeholder='*User', value=PAR.USERNAME)
-    location = ipywidgets.Text(placeholder='*Location', value=PAR.LOCATION)
+    user = ipywidgets.Text(placeholder='*User', value=project.config.get('username'))
+    location = ipywidgets.Text(placeholder='*Location', value=project.config.get('location'))
     action_id = ipywidgets.Text(placeholder='Action id')
     entity_id = ipywidgets.Text(placeholder='Entity id')
     message = ipywidgets.Text(placeholder='Message')

@@ -7,9 +7,19 @@ def expipe():
     return expipe
 
 @lazy_import
-def PAR():
-    from expipe_plugin_cinpla.scripts.config import load_parameters
-    return load_parameters()
+def pathlib():
+    import pathlib
+    return pathlib
+
+
+local_root, _ = expipe.config._load_local_config(pathlib.Path.cwd())
+if local_root is not None:
+    project = expipe.get_project(path=local_root)
+else:
+    class P:
+        config = {}
+    project = P
+
 
 @lazy_import
 def pd():
@@ -20,11 +30,6 @@ def pd():
 def dt():
     import datetime as dt
     return dt
-
-@lazy_import
-def pathlib():
-    import pathlib
-    return pathlib
 
 @lazy_import
 def yaml():

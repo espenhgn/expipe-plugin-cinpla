@@ -6,11 +6,11 @@ def register_axona_recording(
     project, action_id, axona_filename, depth, user, overwrite, templates,
     entity_id, location, message, tag, get_inp, no_cut, cluster_group,
     set_zero_cluster_to_noise, register_depth, correct_depth_answer=None):
-    user = user or PAR.USERNAME
+    user = user or project.config.get('username')
     if user is None:
         print('Missing option "user".')
         return
-    location = location or PAR.LOCATION
+    location = location or project.config.get('location')
     if location is None:
         print('Missing option "location".')
         return

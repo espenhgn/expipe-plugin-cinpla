@@ -49,5 +49,5 @@ def attach_to_cli(cli):
     def _register_adjustment(entity_id, date, adjustment, user, index, init,
                              depth, yes, overwrite):
         adjust.register_adjustment(
-            PAR.PROJECT, entity_id, date, adjustment, user, index, init,
+            project, entity_id, date, adjustment, user, index, init,
             depth, yes, overwrite)

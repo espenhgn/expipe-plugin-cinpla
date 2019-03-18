@@ -3,7 +3,7 @@ from expipe_plugin_cinpla.scripts import axona
 from . import utils
 
 
-def attach_to_cli(cli):
+def attach_to_register(cli):
     @cli.command('axona', short_help='Register an axona recording-action to database.')
     @click.argument('axona-filename', type=click.Path(exists=True))
     @click.option('-u', '--user',
@@ -25,7 +25,7 @@ def attach_to_cli(cli):
                   type=click.STRING,
                   required=True,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_LOCATIONS,
+                  envvar=project.config.get('possible_locations') or [],
                   help='The location of the recording, i.e. "room1".'
                   )
     @click.option('--action-id',
@@ -50,7 +50,7 @@ def attach_to_cli(cli):
                   multiple=True,
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_TAGS,
+                  envvar=project.config.get('possible_tags') or [],
                   help='Add tags to action.',
                   )
     @click.option('--get-inp',
@@ -82,7 +82,7 @@ def attach_to_cli(cli):
         entity_id, location, message, tag, get_inp, no_cut, cluster_group,
         set_zero_cluster_to_noise, register_depth):
         axona.register_axona_recording(
-            project=PAR.PROJECT,
+            project=project,
             action_id=action_id,
             axona_filename=axona_filename,
             depth=depth,
@@ -99,3 +99,34 @@ def attach_to_cli(cli):
             set_zero_cluster_to_noise=set_zero_cluster_to_noise,
             register_depth=register_depth,
             correct_depth_answer=None)
+
+def attach_to_process(cli):
+    @cli.command('axona', short_help='Spikesort with klustakwik.')
+    @click.argument('action-id', type=click.STRING)
+    @click.option('--no-local',
+                  is_flag=True,
+                  help='Store temporary on local drive.',
+                  )
+    def spikesort(action_id, no_local):
+        # anoying!!!!
+        import logging
+        from phycontrib.neo.model import NeoModel
+        logger = logging.getLogger('phy')
+        logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        logger.addHandler(ch)
+
+        local_root, _ = expipe.config._load_local_config(pathlib.Path.cwd())
+        project = expipe.get_project(path=local_root)
+        action = project.require_action(action_id)
+        exdir_path = local_root / action.data[0]
+        print('Spikesorting ', exdir_path)
+        model = NeoModel(exdir_path)
+        channel_groups = model.channel_groups
+        for channel_group in channel_groups:
+            if not channel_group == model.channel_group:
+                model.load_data(channel_group)
+            print('Sorting channel group {}'.format(channel_group))
+            clusters = model.cluster(np.arange(model.n_spikes), model.channel_ids)
+            model.save(spike_clusters=clusters)

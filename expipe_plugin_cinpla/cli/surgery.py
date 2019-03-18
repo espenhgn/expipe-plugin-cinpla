@@ -16,7 +16,7 @@ def attach_to_cli(cli):
                   multiple=True,
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_TAGS,
+                  envvar=project.config.get('possible_tags') or [],
                   help='Add tags to action.',
                   )
     @click.option('--procedure',
@@ -57,7 +57,7 @@ def attach_to_cli(cli):
     @click.option('-l', '--location',
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_LOCATIONS,
+                  envvar=project.config.get('possible_locations') or [],
                   help='The location of the recording, i.e. "room-1-ibv".'
                   )
     @click.option('--templates',
@@ -69,7 +69,7 @@ def attach_to_cli(cli):
         project, entity_id, procedure, date, user, weight, location,
         overwrite, position, angle, message, tag, templates):
         surgery.register_surgery(
-            PAR.PROJECT, entity_id, procedure, date, user, weight, location,
+            project, entity_id, procedure, date, user, weight, location,
             overwrite, position, angle, message, tag, templates)
 
 
@@ -95,7 +95,7 @@ def attach_to_cli(cli):
     @click.option('-l', '--location',
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_LOCATIONS,
+                  envvar=project.config.get('possible_locations') or [],
                   help='The location of the recording, i.e. "room-1-ibv".'
                   )
     @click.option('--overwrite',
@@ -113,5 +113,5 @@ def attach_to_cli(cli):
                   )
     def _register_perfusion(entity_id, date, user, weight, overwrite, message, templates, location):
         surgery.register_perfusion(
-            PAR.PROJECT, entity_id, date, user, weight, overwrite, message,
+            project, entity_id, date, user, weight, overwrite, message,
             templates, location)

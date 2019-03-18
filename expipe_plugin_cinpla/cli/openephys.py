@@ -1,5 +1,6 @@
 from expipe_plugin_cinpla.imports import *
 from expipe_plugin_cinpla.scripts import openephys
+import spiketoolkit as st
 from . import utils
 
 
@@ -22,7 +23,7 @@ def attach_to_register(cli):
     @click.option('-l', '--location',
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_LOCATIONS,
+                  envvar=project.config.get('possible_locations') or [],
                   help='The location of the recording, i.e. "room-1-ibv".'
                   )
     @click.option('--session',
@@ -46,7 +47,7 @@ def attach_to_register(cli):
                   multiple=True,
                   type=click.STRING,
                   callback=utils.optional_choice,
-                  envvar=PAR.POSSIBLE_TAGS,
+                  envvar=project.config.get('possible_tags') or [],
                   help='Add tags to action.',
                   )
     @click.option('--overwrite',
@@ -96,7 +97,7 @@ def attach_to_process(cli):
                   )
     @click.option('--sorter',
                   default='klusta',
-                  type=click.Choice(['klusta', 'mountain', 'kilosort', 'spyking-circus', 'ironclust']),
+                  type=click.Choice([s.sorter_name for s in st.sorters.sorter_full_list]),
                   help='Spike sorter software to be used.',
                   )
     @click.option('--acquisition',
@@ -117,6 +118,15 @@ def attach_to_process(cli):
                   is_flag=True,
                   help='if True LFP are not extracted.',
                   )
+    @click.option('--no-par',
+                  is_flag=True,
+                  help='if True groups are not sorted in parallel.',
+                  )
+    @click.option('--sort-by',
+                  type=click.STRING,
+                  default=None,
+                  help='sort by property (group).',
+                  )
     @click.option('--no-mua',
                   is_flag=True,
                   help='if True MUA are not extracted.',
@@ -131,9 +141,14 @@ def attach_to_process(cli):
                   default=None,
                   help="'local' or name of expipe server.",
                   )
-    @click.option('--ground', '-g',
-                  type=click.INT,
+    @click.option('--bad-channels', '-bc',
+                  type=click.STRING,
                   multiple=True,
+                  default=None,
+                  help="bad channels to ground.",
+                  )
+    @click.option('--bad-threshold', '-bt',
+                  type=click.FLOAT,
                   default=None,
                   help="bad channels to ground.",
                   )
@@ -145,7 +160,8 @@ def attach_to_process(cli):
     @click.option('--split-channels',
                   default='all',
                   type=click.STRING,
-                  help="It can be 'all', 'half', or list of channels used for custom split e.g. [[0,1,2,3,4], [5,6,7,8,9]]"
+                  help="It can be 'all', 'half', or list of channels "
+                       "used for custom split e.g. [[0,1,2,3,4], [5,6,7,8,9]]"
                   )
     @click.option('--ms-before-wf',
                   default=0.5,
@@ -158,7 +174,11 @@ def attach_to_process(cli):
                   help="ms to clip after waveform peak"
                   )
     def _process_openephys(action_id, probe_path, sorter, no_sorting, no_mua, no_lfp, ms_before_wf, ms_after_wf,
-                           spike_params, server, acquisition, exdir_path, ground, ref, split_channels):
+                           spike_params, server, acquisition, exdir_path, bad_channels, ref, split_channels, no_par, sort_by, bad_threshold):
+        if 'auto' in bad_channels:
+            bad_channels = ['auto']
+        else:
+            bad_channels = (int(bc) for bc in bad_channels)
         if no_sorting:
             spikesort = False
         else:
@@ -180,18 +200,22 @@ def attach_to_process(cli):
                 params = dict()
         else:
             params = dict()
-        
+        if no_par:
+            parallel = False
+        else:
+            parallel = True
+
         if split_channels == 'custom':
             import ast
             split_channels = ast.literal_eval(split_channels)
             assert isinstance(split_channels, list), 'With custom reference the list of channels has to be provided ' \
                                                      'with the --split-channels argument'
-
-        openephys.process_openephys(project=PAR.PROJECT, action_id=action_id, probe_path=probe_path, sorter=sorter,
+        openephys.process_openephys(project=project, action_id=action_id, probe_path=probe_path, sorter=sorter,
                                     spikesort=spikesort, compute_lfp=compute_lfp, compute_mua=compute_mua,
                                     spikesorter_params=params, server=server, acquisition_folder=acquisition,
-                                    exdir_file_path=exdir_path, ground=ground, ref=ref, split=split_channels,
-                                    ms_before_wf=ms_before_wf, ms_after_wf=ms_after_wf)
+                                    exdir_file_path=exdir_path, bad_channels=bad_channels, ref=ref, split=split_channels,
+                                    ms_before_wf=ms_before_wf, ms_after_wf=ms_after_wf, parallel=parallel,
+                                    sort_by=sort_by, bad_threshold=bad_threshold)
 
 
     @cli.command('psychopy_cobra',
@@ -208,14 +232,14 @@ def attach_to_process(cli):
         {"grating": {"phase": "f*t", "duration": 2.0, "spatial_frequency": 0.04, "frequency": 4, "orientation": 225}}
         {"grayscreen" : {"duration": 300.}}
         '''
-        
+
         from expipe_plugin_cinpla.scripts.utils import _get_data_path
         from pathlib import Path
         import pandas
         import os
         import warnings
 
-        
+
         project = PAR.PROJECT
         action = project.actions[action_id]
         exdir_path = _get_data_path(action)
@@ -323,7 +347,7 @@ def attach_to_process(cli):
                         l = [key] + [val['motion'], val['t'], 'X' if 'X' in list(val.keys()) else 'Y', val['X' if 'X' in list(val.keys()) else 'Y']]
                         trackballdata.append(tuple(l))
                 return np.array(trackballdata, dtype=dtype)
-            
+
         def generate_tracking(openephys_path, openephys_rec, exdir_file, ttl_time=0.*pq.s):
             trackballdata = get_trackballdata(pth=openephys_path)
             trackballdata['time'] += ttl_time # correct time stamps
@@ -356,11 +380,11 @@ def attach_to_process(cli):
                              'related to this action')
         openephys_session = acquisition.attrs["session"]
         openephys_path = Path(acquisition.directory) / openephys_session
-        
+
         openephys_file = pyopenephys.File(str(openephys_path))
         openephys_exp = openephys_file.experiments[0]
         openephys_rec = openephys_exp.recordings[0]
-            
+
         ttl_times = openephys_rec.events[0].times
         ttl_times = ttl_times[openephys_rec.events[0].full_words==128]
         if len(ttl_times) != 0:

@@ -67,4 +67,11 @@ def process_psychopy(project, action_id, jsonpath):
     data = psychopy.require_dataset('data', data=orientations)
     data.attrs['type'] = key
 
+    # copy json file
+    acquisition = exdir_file.require_group("acquisition")
+    target_folder = os.path.join(str(acquisition.directory), 'psychopy')
+
+    print("Copying ", jsonpath, " to ", target_folder)
+    shutil.copy(jsonpath, target_folder)
+
     print("Done. The data is located in {}".format(exdir_path))

@@ -5,7 +5,7 @@ from . import utils
 def register_entity(project, entity_id, user, message, location, tag, overwrite,
                     birthday, templates, **kwargs):
     DTIME_FORMAT = expipe.core.datetime_format
-    user = user or PAR.USERNAME
+    user = user or project.config.get('username')
     if user is None:
         print('Missing option "user".')
         return

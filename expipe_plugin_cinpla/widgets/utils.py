@@ -38,18 +38,19 @@ class SearchSelectMultiple(ipywidgets.VBox):
         )
         self.description = kwargs.get('description') or '' # TODO move into placeholder
         search_widget = ipywidgets.Text(
-            placeholder=self.description, layout={'width': self.select_multiple.layout.width})
+            placeholder=self.description,
+            layout={'width': self.select_multiple.layout.width})
         orig_list = list(self.select_multiple.options)
         # Wire the search field to the checkboxes
         def on_text_change(change):
             search_input = change['new']
             if search_input == '':
                 # Reset search field
-                new_options = orig_list
+                new_options = sorted(orig_list)
             else:
                 # Filter by search field.
                 new_options = [a for a in orig_list if search_input in a]
-            self.select_multiple.options = new_options
+            self.select_multiple.options = sorted(new_options)
 
         search_widget.observe(on_text_change, names='value')
         self.children = [search_widget, self.select_multiple]
@@ -70,7 +71,8 @@ class SearchSelect(ipywidgets.VBox):
         )
         self.description = kwargs.get('description') or ''
         search_widget = ipywidgets.Text(
-            placeholder=self.description, layout={'width': self.select.layout.width})
+            placeholder=self.description,
+            layout={'width': self.select.layout.width})
         orig_list = list(self.select.options)
         # Wire the search field to the checkboxes
         def on_text_change(change):
@@ -135,17 +137,28 @@ class ParameterSelectList(ipywidgets.VBox):
         children = []
         for (k, v) in param_dict.items():
             if isinstance(v, bool):
-                wid = ipywidgets.ToggleButton(description=k, value=v, disabled=False, button_style='',
-                                              tooltip='Description',
-                                              icon='check', style={'description_width': 'initial'})
+                wid = ipywidgets.ToggleButton(
+                    description=k, value=v, disabled=False, button_style='',
+                    tooltip='Description', icon='check',
+                    style={'description_width': 'initial'})
+                children.append(wid)
             elif isinstance(v, (int, np.integer)):
-                wid = ipywidgets.IntText(description=k, value=v, style={'description_width': 'initial'})
+                wid = ipywidgets.IntText(
+                    description=k, value=v,
+                    style={'description_width': 'initial'})
+                children.append(wid)
             elif isinstance(v, (float, np.float)):
-                wid = ipywidgets.FloatText(description=k, value=v, style={'description_width': 'initial'})
+                wid = ipywidgets.FloatText(
+                    description=k, value=v,
+                    style={'description_width': 'initial'})
+                children.append(wid)
+            elif not isinstance(v, dict):
+                wid = ipywidgets.Text(
+                    description=k, value=str(v),
+                    style={'description_width': 'initial'})
+                children.append(wid)
             else:
-                wid = ipywidgets.Text(description=k, value=str(v), style={'description_width': 'initial'})
-
-            children.append(wid)
+                print('not showing dictionary')
         self.children = children
 
     @property
@@ -194,13 +207,14 @@ class DatePicker(ipywidgets.DatePicker):
 
 
 class SelectFileButton(ipywidgets.Button):
-    """A file widget that leverages tkinter.filedialog."""
+    """A file widget that leverages tkfilebrowser."""
 
-    def __init__(self, filetype=None, *args, **kwargs):
+    def __init__(self, filetype=None, initialdir=None, *args, **kwargs):
         """Initialize the SelectFileButton class."""
         super(SelectFileButton, self).__init__(*args, **kwargs)
         # Add the selected_file trait
         import traitlets
+        self.initialdir = initialdir
         self.add_traits(file=traitlets.traitlets.Unicode())
         # Create the button.
         self.description = kwargs.get('description') or "Select file"
@@ -213,9 +227,8 @@ class SelectFileButton(ipywidgets.Button):
 
     @staticmethod
     def select_file(self):
-        from tkinter import Tk, filedialog
-        """Generate instance of tkinter.filedialog.
-        """
+        from tkfilebrowser import askopenfilename
+        from tkinter import Tk
         # Create Tk root
         root = Tk()
         # Hide the main window
@@ -228,12 +241,15 @@ class SelectFileButton(ipywidgets.Button):
             if not ft.startswith('.'):
                 ft = '.' + ft
             name = ft[1:].capitalize()
-            result = filedialog.askopenfilename(
+            result = askopenfilename(
                 defaultextension=ft,
-                filetypes=[('{} file'.format(name),'*{}'.format(ft)), ('All files','*.*')])
+                filetypes=[
+                    ('{} file'.format(name),'*{}'.format(ft)),
+                    ('All files','*.*')],
+                initialdir=self.initialdir)
             self.file = result if len(result) > 0 else ''
         else:
-            result = filedialog.askopenfilename()
+            result = askopenfilename()
             self.file = result if len(result) > 0 else ''
         if len(self.file) > 0:
             self.description = "File Selected"
@@ -245,27 +261,27 @@ class SelectFileButton(ipywidgets.Button):
 
 
 class SelectDirectoryButton(ipywidgets.Button):
-    """A file widget that leverages tkinter.filedialog."""
+    """A directory widget that leverages tkfilebrowser."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, initialdir=None, *args, **kwargs):
         """Initialize the SelectDirectoryButton class."""
         super(SelectDirectoryButton, self).__init__(*args, **kwargs)
         # Add the selected_files trait
         import traitlets
-        self.add_traits(directory=traitlets.traitlets.Unicode())
+        self.initialdir = initialdir
+        self.add_traits(directories=traitlets.traitlets.List())
         # Create the button.
         self.description = kwargs.get('description') or "Select Directory"
         self.icon = "square-o"
         self.style.button_color = "orange"
         # Set on click behavior.
-        self.on_click(self.select_directory)
+        self.on_click(self.select_directories)
         self.value = False
 
     @staticmethod
-    def select_directory(self):
-        from tkinter import Tk, filedialog
-        """Generate instance of tkinter.filedialog.
-        """
+    def select_directories(self):
+        from tkfilebrowser import askopendirnames
+        from tkinter import Tk
         # Create Tk root
         root = Tk()
         # Hide the main window
@@ -273,9 +289,9 @@ class SelectDirectoryButton(ipywidgets.Button):
         # Raise the root to the top of all windows.
         root.call('wm', 'attributes', '.', '-topmost', True)
         # List of selected fileswill be set to self.value
-        self.directory = filedialog.askdirectory()
+        self.directories = askopendirnames(initialdir=self.initialdir)
 
-        if self.directory is not None:
+        if len(self.directories) > 0:
             self.description = "Directory Selected"
             self.icon = "check-square-o"
             self.style.button_color = "lightgreen"

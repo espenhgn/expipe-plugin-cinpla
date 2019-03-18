@@ -1,6 +1,5 @@
 from expipe_plugin_cinpla.imports import *
 import re
-from .config import load_parameters
 
 nwb_main_groups = ['acquisition', 'analysis', 'processing', 'epochs',
                    'general']
@@ -44,7 +43,7 @@ def query_yes_no(question, default="yes", answer=None):
 
 
 def deltadate(adjustdate, regdate):
-    delta = regdate - adjustdate if regdate > adjustdate else timedelta.max
+    delta = regdate - adjustdate if regdate > adjustdate else datetime.timedelta.max
     return delta
 
 
@@ -93,7 +92,7 @@ def get_depth_from_adjustment(project, action, entity_id):
     return adjusts[adjustdate]['depth'].contents, adjustdate
 
 
-def register_depth(project, action, depth=None, answer=None):
+def register_depth(project, action, depth=None, answer=None, overwrite=False):
     if len(action.entities) != 1:
         print('Exactly 1 entity is required to register depth.')
         return False
@@ -105,13 +104,13 @@ def register_depth(project, action, depth=None, answer=None):
     else:
         curr_depth, adjustdate = get_depth_from_adjustment(
             project, action, action.entities[0])
+        print('Adjust date time: {}\n'.format(adjustdate))
     if curr_depth is None:
         print('Cannot find current depth from adjustments.')
         return False
 
     def last_num(x):
         return '{:03d}'.format(int(x.split('_')[-1]))
-    print('Adjust date time: {}\n'.format(adjustdate))
     print(''.join('Depth: {} {} = {}\n'.format(key, probe_key, val[probe_key])
             for key, val in curr_depth.items()
             for probe_key in sorted(val, key=lambda x: last_num(x))))
@@ -120,7 +119,8 @@ def register_depth(project, action, depth=None, answer=None):
         answer=answer)
     if not correct:
         return False
-
+    if 'depth' in action.modules and overwrite:
+        action.delete_module('depth')
     action.create_module(name='depth', contents=curr_depth)
     return True
 
@@ -204,19 +204,12 @@ class ShellHandler:
 
         shout = []
         sherr = []
-        exit_status = 0
         for line in self.stdout:
             if str(line).startswith(cmd) or str(line).startswith(echo_cmd):
                 # up for now filled with shell junk from stdin
                 shout = []
             elif finish in str(line):
                 # our finish command ends with the exit status
-                exit_status = int(str(line).rsplit(maxsplit=1)[1])
-                if exit_status:
-                    # stderr is combined with stdout.
-                    # thus, swap sherr with shout in a case of failure.
-                    sherr = shout
-                    shout = []
                 if print_lines:
                     print('finish command: break')
                 break

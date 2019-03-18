@@ -8,19 +8,19 @@ from click.testing import CliRunner
 expipe.ensure_testing()
 
 
-PROJECT_ID = PAR.PROJECT_ID
+project.config['project'] = project.config['project']
 ACTION_ID = 'action-plugin-test'
 MODULE_ID = 'module-plugin-test'
 RAT_ID = 'test-rat'
 
 
 def pytest_namespace():
-    return {"PROJECT_ID": PROJECT_ID,
+    return {"project.config['project']": project.config['project'],
             "ACTION_ID": ACTION_ID,
             "MODULE_ID": MODULE_ID,
             "RAT_ID": RAT_ID,
-            "USERNAME": PAR.USERNAME,
-            "PAR.POSSIBLE_TAGS": PAR.POSSIBLE_TAGS,
+            "USERNAME": project.config.get('username'),
+            "project.config.get('possible_tags') or []": project.config.get('possible_tags') or [],
             "OBLIGATORY_TAGS": OBLIGATORY_TAGS}
 
 
@@ -41,10 +41,10 @@ def run_command(command_list, inp=None):
 @pytest.fixture(scope='function')
 def teardown_setup_project():
     try:
-        expipe_server.delete_project(PROJECT_ID, remove_all_childs=True)
+        expipe_server.delete_project(project.config['project'], remove_all_childs=True)
     except NameError:
         pass
-    project = expipe_server.require_project(PROJECT_ID)
+    project = expipe_server.require_project(project.config['project'])
     action = project.require_action(ACTION_ID)
     yield project, action
 
@@ -52,10 +52,10 @@ def teardown_setup_project():
 @pytest.fixture(scope='module')
 def module_teardown_setup_project_setup():
     try:
-        expipe_server.delete_project(PROJECT_ID, remove_all_childs=True)
+        expipe_server.delete_project(project.config['project'], remove_all_childs=True)
     except NameError:
         pass
-    project = expipe_server.require_project(PROJECT_ID)
+    project = expipe_server.require_project(project.config['project'])
 
     from expipe_plugin_cinpla.main import CinplaPlugin
     CinplaPlugin().attach_to_cli(cli)
@@ -80,7 +80,7 @@ def module_teardown_setup_project_setup():
 
 @pytest.fixture
 def setup_project_action():
-    project = expipe_server.require_project(PROJECT_ID)
+    project = expipe_server.require_project(project.config['project'])
     try:
         project.delete_action(ACTION_ID)
     except NameError:

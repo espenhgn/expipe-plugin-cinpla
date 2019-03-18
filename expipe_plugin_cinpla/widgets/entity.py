@@ -5,7 +5,7 @@ from .utils import DatePicker, SearchSelectMultiple, required_values_filled, non
 
 def entity_view(project):
     entity_id = ipywidgets.Text(placeholder='*Entity id')
-    user = ipywidgets.Text(placeholder='*User', value=PAR.USERNAME)
+    user = ipywidgets.Text(placeholder='*User', value=project.config.get('username'))
     message = ipywidgets.Text(placeholder='Message')
     location = ipywidgets.Text(placeholder='*Location')
     tag = ipywidgets.Text(placeholder='Tags (; to separate)')

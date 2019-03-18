@@ -8,11 +8,11 @@ def surgery_view(project):
     procedure = ipywidgets.Dropdown(
         description='*Procedure', options=['implantation', 'injection'])
     date = DatePicker(description='*Date', disabled=False)
-    user = ipywidgets.Text(placeholder='*User', value=PAR.USERNAME)
+    user = ipywidgets.Text(placeholder='*User', value=project.config.get('username'))
     weight = ipywidgets.HBox([
         ipywidgets.Text(placeholder='*Weight', layout={'width': '60px'}),
         ipywidgets.Text(placeholder='*Unit', layout={'width': '60px'})])
-    location = ipywidgets.Text(placeholder='*Location', value=PAR.LOCATION)
+    location = ipywidgets.Text(placeholder='*Location', value=project.config.get('location'))
     message = ipywidgets.Text(placeholder='Message', value=None)
     tag = ipywidgets.Text(placeholder='Tags (; to separate)')
     position = MultiInput(['*Key', '*Probe', '*x', '*y', '*z', '*Unit'], 'Add position')
@@ -68,7 +68,8 @@ def surgery_view(project):
 def perfuse_view(project):
     entity_id = SearchSelect(options=project.entities, description='*Entities')
     date = DatePicker(disabled=False)
-    user = ipywidgets.Text(placeholder='*User', value=PAR.USERNAME)
+    user = ipywidgets.Text(placeholder='*User', value=project.config.get('username'))
+    location = ipywidgets.Text(placeholder='*Location')
     message = ipywidgets.Text(placeholder='Message')
     weight = ipywidgets.HBox([
         ipywidgets.Text(placeholder='*Weight', layout={'width': '60px'}),
@@ -79,6 +80,7 @@ def perfuse_view(project):
     register = ipywidgets.Button(description='Register')
     fields = ipywidgets.VBox([
         user,
+        location,
         date,
         weight,
         message,
@@ -96,6 +98,7 @@ def perfuse_view(project):
         surgery.register_perfusion(
             project=project,
             entity_id=entity_id.value,
+            location=location.value,
             user=user.value,
             overwrite=overwrite.value,
             templates=templates.value,

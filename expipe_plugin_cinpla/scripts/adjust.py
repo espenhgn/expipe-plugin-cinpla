@@ -26,7 +26,7 @@ adjustment_template = {
 
 def register_adjustment(project, entity_id, date, adjustment, user,
                         depth, yes):
-    user = user or PAR.USERNAME
+    user = user or project.config.get('username')
     if user is None:
         print('Missing option "user".')
         return
@@ -119,3 +119,38 @@ def register_adjustment(project, entity_id, date, adjustment, user,
     action.type = 'Adjustment'
     action.entities = [entity_id]
     action.users.append(user)
+
+
+def register_annotation(
+    project, action_id, entity_id, action_type, date, user, location,
+    depth, message, tag, templates, correct_depth_answer):
+    user = user or project.config.get('username')
+    action = project.actions[action_id]
+    if user is None:
+        print('Missing option "user".')
+        return
+    print('Registering user', user)
+    action.users = [user]
+    if date:
+        print('Registering date ', date)
+        action.datetime = date
+    if action_type:
+        print('Registering type', action_type)
+        action.type = action_type
+    utils.register_templates(action, templates, overwrite=True)
+    if tag:
+        print('Registering tags', tag)
+        action.tags.extend(list(tag))
+    if entity_id:
+        print('Registering entity id', entity_id)
+        action.entities = [entity_id]
+    if location:
+        print('Registering location', location)
+        action.location = location
+    if message:
+        print('Registering message', message)
+        action.create_message(text=message, user=user, datetime=datetime.datetime.now())
+    if depth:
+        correct_depth = utils.register_depth(
+            project=project, action=action, depth=depth,
+            answer=correct_depth_answer, overwrite=True)

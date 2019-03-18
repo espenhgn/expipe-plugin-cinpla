@@ -34,4 +34,5 @@ class CinplaPlugin(IPlugin):
         PS.attach_to_process(process)
         IN.attach_to_register(register)
         IN.attach_to_process(process)
-        AX.attach_to_cli(register)
+        AX.attach_to_register(register)
+        AX.attach_to_process(process)

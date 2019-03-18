@@ -1,6 +1,7 @@
 from expipe_plugin_cinpla.imports import *
 from expipe_plugin_cinpla.scripts.utils import _get_data_path
 from expipe_io_neuro.openephys.openephys import generate_tracking, generate_events
+import os
 
 
 def process_tracking(project, action_id, openephys_path):
@@ -24,5 +25,11 @@ def process_tracking(project, action_id, openephys_path):
             print('Saving ', len(oe_recording.events), ' Open Ephys event sources')
             generate_events(exdir_path, oe_recording)
 
-        openephys_io.convert_tracking(
-            oe_recording, exdir_path=exdir_path, session=session)
+        # Copy tracking files
+        experiment = oe_recording.experiment
+        acquisition = exdir_file.require_group("acquisition")
+
+        target_folder = os.path.join(str(acquisition.directory), 'tracking')
+
+        print("Copying ", oe_recording.absolute_foldername, " to ", target_folder)
+        shutil.copytree(experiment.file.absolute_foldername, target_folder)

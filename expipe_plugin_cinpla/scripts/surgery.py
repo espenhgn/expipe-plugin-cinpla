@@ -9,11 +9,11 @@ def register_surgery(
     if weight == (None, None):
         print('Missing option "weight".')
         return
-    user = user or PAR.USERNAME
+    user = user or project.config.get('username')
     if user is None:
         print('Missing option "user".')
         return
-    location = location or PAR.LOCATION
+    location = location or project.config.get('location')
     if location is None:
         print('Missing option "location".')
         return
@@ -70,11 +70,11 @@ def register_surgery(
 def register_perfusion(project, entity_id, date, user, weight, overwrite,
                        message, templates, location):
     action_id = entity_id + '-perfusion'
-    user = user or PAR.USERNAME
+    user = user or project.config.get('username')
     if user is None:
         print('Missing option "user".')
         return
-    location = location or PAR.LOCATION
+    location = location or project.config.get('location')
     if location is None:
         print('Missing option "location".')
         return

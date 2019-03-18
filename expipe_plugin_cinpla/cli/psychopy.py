@@ -11,4 +11,4 @@ def attach_to_process(cli):
                   type=click.STRING,
                   help='Psyschopy for visual analysis files are present.')
     def _process_psychopy(action_id, jsonpath):
-            psychopy.process_psychopy(project=PAR.PROJECT, action_id=action_id, jsonpath=jsonpath)
+        psychopy.process_psychopy(project=project, action_id=action_id, jsonpath=jsonpath)
