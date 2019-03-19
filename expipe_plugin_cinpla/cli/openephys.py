@@ -149,8 +149,8 @@ def attach_to_process(cli):
                   )
     @click.option('--bad-threshold', '-bt',
                   type=click.FLOAT,
-                  default=None,
-                  help="bad channels to ground.",
+                  default=2.,
+                  help="threshold for auto bad channel detection.",
                   )
     @click.option('--ref',
                   default='cmr',
@@ -240,7 +240,7 @@ def attach_to_process(cli):
         import warnings
 
 
-        project = PAR.PROJECT
+        #project = PAR.PROJECT
         action = project.actions[action_id]
         exdir_path = _get_data_path(action)
         exdir_file = exdir.File(exdir_path, plugins=exdir.plugins.quantities)
@@ -370,7 +370,7 @@ def attach_to_process(cli):
                     dset = led.require_dataset('times', data=data['time'][inds]*pq.s)   # TODO: GRAB P-PORT EVENT - 10 s as mouse recording is always 10 s before the first visual stimulus
                     dset.attrs['num_samples'] = inds.sum()
 
-        project = PAR.PROJECT
+        #project = PAR.PROJECT
         action = project.actions[action_id]
         exdir_path = _get_data_path(action)
         exdir_file = exdir.File(exdir_path, plugins=exdir.plugins.quantities)

@@ -110,7 +110,7 @@ def process_openephys(project, action_id, probe_path, sorter, acquisition_folder
                 if 'electrophysiology' in exdir_file['processing']:
                     print('Deleting old processing/electrophysiology')
                     shutil.rmtree(
-                        exdir_file['processing']['electrophysiology'].directory)
+                        str(exdir_file['processing']['electrophysiology'].directory))
         else:
             openephys_path = Path(acquisition_folder)
             assert exdir_file_path is not None
@@ -458,7 +458,7 @@ def process_openephys(project, action_id, probe_path, sorter, acquisition_folder
             if 'electrophysiology' in exdir_file['processing']:
                 print('Deleting old processing/electrophysiology')
                 shutil.rmtree(
-                    exdir_file['processing']['electrophysiology'].directory)
+                    str(exdir_file['processing']['electrophysiology'].directory))
         tar = tarfile.open(local_proc_tar)
         tar.extractall(str(exdir_path))
         print('Deleting tar archives')
