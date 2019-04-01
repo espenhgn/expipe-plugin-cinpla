@@ -70,7 +70,7 @@ def attach_to_register(cli):
     def _register_openephys_recording(action_id, openephys_path, depth, overwrite, templates,
                                       entity_id, user, session, location, message, tag, register_depth,
                                       delete_raw_data):
-        openephys.register_openephys_recording(project=PAR.PROJECT,
+        openephys.register_openephys_recording(project=project,
                                                action_id=action_id,
                                                openephys_path=openephys_path,
                                                depth=depth,
