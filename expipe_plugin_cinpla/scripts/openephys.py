@@ -255,12 +255,14 @@ def process_openephys(project, action_id, probe_path, sorter, acquisition_folder
             if sort_by == 'group':
                 wf = st.postprocessing.getUnitWaveforms(
                     recording_cmr, sorting, grouping_property='group',
-                    ms_before=ms_before_wf, ms_after=ms_after_wf, verbose=True)
+                    ms_before=ms_before_wf, ms_after=ms_after_wf, verbose=True,
+                    dtype=np.float32)
             else:
                 wf = st.postprocessing.getUnitWaveforms(
                     recording_cmr, sorting, grouping_property='group',
                     compute_property_from_recording=True,
-                    ms_before=ms_before_wf, ms_after=ms_after_wf, verbose=True)
+                    ms_before=ms_before_wf, ms_after=ms_after_wf, verbose=True,
+                    dtype=np.float32)
             print('Saving sorting output to exdir format')
             se.ExdirSortingExtractor.writeSorting(
                 sorting, exdir_path, recording=recording_cmr)
